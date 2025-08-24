@@ -170,7 +170,7 @@ export default function Kitchen() {
   // Show login form if not authenticated
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen w-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md w-full space-y-8">
           <div>
             <div className="mx-auto h-12 w-12 bg-red-500 rounded-lg flex items-center justify-center mb-6">
@@ -440,7 +440,7 @@ export default function Kitchen() {
         {/* Orders List */}
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 bg-red-500"></div>
             <span className="ml-2 text-gray-600">Loading orders...</span>
           </div>
         ) : filteredOrders.length === 0 ? (
@@ -544,7 +544,7 @@ export default function Kitchen() {
                         <button
                           onClick={() => updateOrderStatus(order.id, config.nextStatus)}
                           disabled={updatingStatus === order.id}
-                          className="flex-1 bg-blue-500 text-white py-2 px-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors text-sm flex items-center justify-center gap-1"
+                          className="flex-1 bg-red-500 text-white py-2 px-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors text-sm flex items-center justify-center gap-1"
                         >
                           {updatingStatus === order.id ? (
                             <RefreshCw className="w-4 h-4 animate-spin" />
