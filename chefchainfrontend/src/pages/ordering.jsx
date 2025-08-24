@@ -112,6 +112,7 @@ export default function Ordering() {
 
 
   // Add to cart
+
   const addToCart = (item) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
