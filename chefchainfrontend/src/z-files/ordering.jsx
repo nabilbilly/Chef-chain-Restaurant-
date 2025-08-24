@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api"; // your axios instance
-import { Search, ShoppingCart, Plus, Minus, X, Filter, Grid, List, Clock, Star, CheckCircle, AlertCircle } from "lucide-react";
+import { Search, ShoppingCart, Plus, Minus, X, Filter, Grid, List, Clock, Star } from "lucide-react";
+
+
 
 export default function Ordering() {
   const [categories, setCategories] = useState([]);
@@ -13,17 +15,11 @@ export default function Ordering() {
   const [viewMode, setViewMode] = useState('grid');
   const [showCart, setShowCart] = useState(false);
 
-  // Order state
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState(false);
-  const [orderError, setOrderError] = useState(null);
-  const [tableNumber, setTableNumber] = useState("");
-  const [orderType, setOrderType] = useState("dine_in"); // dine_in, takeaway, delivery
-  const [customerId, setCustomerId] = useState(1); // You might get this from auth context
-
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+  
+    
   
   // Fetch categories on load
   useEffect(() => {
@@ -37,15 +33,18 @@ export default function Ordering() {
     };
     fetchCategories();
   }, []);
+ 
 
-  // Fetch items when category changes (or load all if none selected)
+    // Fetch items when category changes (or load all if none selected)
   useEffect(() => {
     const fetchItems = async () => {
       try {
         let res;
         if (selectedCategory) {
+          // Fetch items by category
           res = await api.get(`/menu/?category=${selectedCategory.id}`);
         } else {
+          // Fetch all items
           res = await api.get("/menu/");
         }
         setMenuItems(res.data.results ? res.data.results : res.data);
@@ -56,6 +55,19 @@ export default function Ordering() {
 
     fetchItems();
   }, [selectedCategory]);
+
+  
+  // // Handle search
+  // const handleSearch = async () => {
+  //   e.preventDefault();
+  //   if (searchQuery.trim() === "") return;
+  //   try {
+  //     const res = await api.get(`/menu/?search=${searchQuery}`);
+  //     setSearchResults(res.data.results ? res.data.results : res.data);
+  //   } catch (err) {
+  //     console.error("Error searching items", err);
+  //   }
+  // };
 
   useEffect(() => {
     fetchMenuItems();
@@ -69,13 +81,13 @@ export default function Ordering() {
       console.error("Error fetching menu items", err);
     }
   };
-
-  // Handle search
+// Handle search
   const handleSearch = async (e) => {
     e.preventDefault();
     try {
       let res;
       if (searchQuery.trim() === "") {
+        // if empty, load all again
         res = await api.get("/menu/");
       } else {
         res = await api.get(`/menu/?search=${searchQuery}`);
@@ -85,8 +97,7 @@ export default function Ordering() {
       console.error("Error searching items", err);
     }
   };
-
-  // Filter by category (if selected)
+   // Filter by category (if selected)
   const filteredItems = selectedCategory
     ? menuItems.filter((item) => item.category === selectedCategory.id)
     : menuItems;
@@ -96,7 +107,12 @@ export default function Ordering() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItem = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
+
+
+
+
   // Add to cart
+
   const addToCart = (item) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
@@ -123,100 +139,11 @@ export default function Ordering() {
     );
   };
 
-  // Remove item from cart
-  const removeFromCart = (itemId) => {
-    setCart(prevCart => prevCart.filter(item => item.id !== itemId));
-  };
-
-  // Clear cart
-  const clearCart = () => {
-    setCart([]);
-  };
-
-  // Place order function using your cart-based system
-  const placeOrder = async () => {
-    if (cart.length === 0) {
-      setOrderError("Your cart is empty!");
-      return;
-    }
-
-    if (!tableNumber && orderType === "dine_in") {
-      setOrderError("Please enter a table number for dine-in orders");
-      return;
-    }
-
-    setIsPlacingOrder(true);
-    setOrderError(null);
-
-    try {
-      // Step 1: Add all items to the backend cart first
-      console.log("Adding items to cart...");
-      for (const cartItem of cart) {
-        console.log("Adding item:", cartItem);
-        await api.post("/cart/add/", {
-          item: cartItem.id,
-          quantity: cartItem.quantity
-        });
-      }
-
-      // Step 2: Create the order
-      console.log("Creating order...");
-      const orderData = {
-        table_number: orderType === "dine_in" ? tableNumber : null,
-        order_type: orderType
-      };
-      
-      console.log("Order data being sent:", orderData);
-      const response = await api.post("/orders/create/", orderData);
-      console.log("Order created successfully:", response.data);
-
-      // Success - clear cart and show success message
-      setOrderSuccess(true);
-      clearCart();
-      setTableNumber("");
-      
-      // Hide success message after 3 seconds
-      setTimeout(() => {
-        setOrderSuccess(false);
-      }, 3000);
-
-    } catch (error) {
-      console.error("Error placing order:", error);
-      console.error("Error response:", error.response?.data);
-      console.error("Error status:", error.response?.status);
-      
-      let errorMessage = "Failed to place order. Please try again.";
-      
-      if (error.response?.data) {
-        if (typeof error.response.data === 'string') {
-          errorMessage = error.response.data;
-        } else if (error.response.data.detail) {
-          errorMessage = error.response.data.detail;
-        } else if (error.response.data.message) {
-          errorMessage = error.response.data.message;
-        } else {
-          // Handle field validation errors
-          const errors = Object.entries(error.response.data).map(([field, messages]) => {
-            const messageArray = Array.isArray(messages) ? messages : [messages];
-            return `${field}: ${messageArray.join(', ')}`;
-          });
-          errorMessage = errors.join('; ');
-        }
-      }
-      
-      setOrderError(errorMessage);
-    } finally {
-      setIsPlacingOrder(false);
-    }
-  };
-
   // Get category icon
   const getCategoryIcon = (name) => {
     const iconMap = {
       'Pizza': '🍕', 'Burger': '🍔', 'Pasta': '🍝', 'Salad': '🥗',
-      'Dessert': '🍰', 'Drink': '🥤', 'Pastries': '🥖', 'Main': '🍽️', 
-      'Breakfast': '🥞', 'Lunch': '🍱', 'Dinner': '🍛', 'Snack': '🍟', 
-      'Bread': '🍞','Rice Dish': '🍚'
+      'Dessert': '🍰', 'Drink': '🥤', 'Pastries': '🥖', 'Main': '🍽️', 'Breakfast': '🥞', 'Lunch': '🍱', 'Dinner': '🍛', 'Snack': '🍟', 'Bread': '🍞','Rice Dish': '🍝'
     };
     return iconMap[name] || '🍽️';
   };
@@ -230,29 +157,6 @@ export default function Ordering() {
 
   return (
     <div className="min-h-screen w-screen bg-gray-50">
-      {/* Success/Error Messages */}
-      {orderSuccess && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 flex items-center gap-2">
-          <CheckCircle className="w-5 h-5" />
-          <span>Order placed successfully!</span>
-        </div>
-      )}
-      
-      {orderError && (
-        <div className="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50 flex items-center gap-2">
-          <AlertCircle className="w-5 h-5" />
-          <div>
-            <span>{orderError}</span>
-            <button 
-              onClick={() => setOrderError(null)}
-              className="ml-2 text-white hover:text-gray-200"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -301,10 +205,34 @@ export default function Ordering() {
           {/* Left Sidebar */}
           <div className="w-80 flex-shrink-0">
             {/* Search */}
-            <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Search Menu
-              </h3>
+             
+      <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Search Menu
+        </h3>
+
+        <form onSubmit={handleSearch} className="flex gap-2 w-full">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search delicious food..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+        </form>
+      </div>
+            {/* <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Search Menu</h3>
 
               <form onSubmit={handleSearch} className="flex gap-2 w-full">
                 <div className="relative flex-1">
@@ -325,7 +253,9 @@ export default function Ordering() {
                   <Search className="w-4 h-4" />
                 </button>
               </form>
-            </div>
+            </div> */}
+
+   
 
             {/* Categories */}
             <div className="bg-white rounded-xl shadow-sm p-6">
@@ -396,24 +326,32 @@ export default function Ordering() {
                       viewMode === 'list' ? 'flex gap-4 p-4' : 'p-6'
                     }`}
                   >
+                    {/* Item Image Placeholder
+                    <div className={`bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg flex items-center justify-center ${
+                      viewMode === 'list' ? 'w-20 h-20 flex-shrink-0' : 'w-full h-48 mb-4'
+                    }`}>
+                      <span className="text-4xl">🍽️</span>
+                    </div> */}
                     {/* Item Image */}
-                    <div
-                      className={`rounded-lg overflow-hidden flex items-center justify-center ${
-                        viewMode === "list" ? "w-20 h-20 flex-shrink-0" : "w-full h-48 mb-4"
-                      }`}
-                    >
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="object-cover w-full h-full"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center w-full h-full bg-orange-100">
-                          <span className="text-4xl">🍽️</span>
-                        </div>
-                      )}
-                    </div>
+                  <div
+                    className={`rounded-lg overflow-hidden flex items-center justify-center ${
+                      viewMode === "list" ? "w-20 h-20 flex-shrink-0" : "w-full h-48 mb-4"
+                    }`}
+                  >
+                    {item.image ? (
+                      <img
+                        src={item.image}          // or item.image_url depending on your API
+                        alt={item.name}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center w-full h-full bg-orange-100">
+                        <span className="text-4xl">🍽️</span>
+                      </div>
+                    )}
+                  </div>
+
+
 
                     <div className="flex-1">
                       <div className={`flex items-start justify-between ${viewMode === 'list' ? 'mb-2' : 'mb-3'}`}>
@@ -484,38 +422,6 @@ export default function Ordering() {
 
               {cart.length > 0 ? (
                 <>
-                  {/* Order Type Selection */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Order Type
-                    </label>
-                    <select
-                      value={orderType}
-                      onChange={(e) => setOrderType(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    >
-                      <option value="dine_in">Dine In</option>
-                      <option value="takeaway">Takeaway</option>
-                      <option value="delivery">Delivery</option>
-                    </select>
-                  </div>
-
-                  {/* Table Number for Dine In */}
-                  {orderType === "dine_in" && (
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Table Number *
-                      </label>
-                      <input
-                        type="text"
-                        value={tableNumber}
-                        onChange={(e) => setTableNumber(e.target.value)}
-                        placeholder="Enter table number"
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      />
-                    </div>
-                  )}
-
                   <div className="space-y-3 mb-6">
                     {cart.map((item) => (
                       <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -529,22 +435,16 @@ export default function Ordering() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => updateCartQuantity(item.id, -1)}
-                            className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
+                            className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center"
                           >
                             <Minus className="w-3 h-3" />
                           </button>
                           <span className="w-8 text-center text-sm">{item.quantity}</span>
                           <button
                             onClick={() => updateCartQuantity(item.id, 1)}
-                            className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600"
+                            className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center"
                           >
                             <Plus className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={() => removeFromCart(item.id)}
-                            className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 ml-2"
-                          >
-                            <X className="w-3 h-3" />
                           </button>
                         </div>
                       </div>
@@ -566,26 +466,8 @@ export default function Ordering() {
                     </div>
                   </div>
 
-                  <button 
-                    onClick={placeOrder}
-                    disabled={isPlacingOrder || (orderType === "dine_in" && !tableNumber)}
-                    className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isPlacingOrder ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Placing Order...
-                      </div>
-                    ) : (
-                      'Place Order'
-                    )}
-                  </button>
-                  
-                  <button
-                    onClick={clearCart}
-                    className="w-full mt-2 text-gray-600 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm"
-                  >
-                    Clear Cart
+                  <button className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium">
+                    Place Order
                   </button>
                 </>
               ) : (

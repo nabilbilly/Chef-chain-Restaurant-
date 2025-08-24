@@ -1,7 +1,7 @@
 # urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import MenuItemViewSet, RegisterView, CustomLoginView, CategoryListView, OrderListView, OrderCreateView
+from .views import MenuItemViewSet, RegisterView, CustomLoginView, CategoryListView, OrderListView, OrderCreateView, CartView, AddToCartView, UpdateCartItemView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 router = DefaultRouter()
@@ -19,6 +19,9 @@ urlpatterns = [
     path("orders/", OrderListView.as_view(), name="order-list"),
     path("orders/create/", OrderCreateView.as_view(), name="order-create"),
     
+     path("cart/", CartView.as_view(), name="cart-detail"),
+    path("cart/add/", AddToCartView.as_view(), name="cart-add"),
+    path("cart/item/<int:pk>/", UpdateCartItemView.as_view(), name="cart-item-update"),
 ]
 
 

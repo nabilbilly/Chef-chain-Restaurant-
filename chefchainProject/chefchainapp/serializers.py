@@ -112,3 +112,29 @@ class OrderSerializer(serializers.ModelSerializer):
         return order
 
 
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    item_name = serializers.ReadOnlyField(source="item.name")
+    price = serializers.ReadOnlyField(source="item.price")
+    total_price = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OrderItem
+        fields = ["id", "item", "item_name", "price", "quantity", "total_price"]
+
+    def get_total_price(self, obj):
+        return obj.get_total_price()
+
+
+
+
+        
+# orders/serializers.py
+class OrderSerializer(serializers.ModelSerializer):
+    order_items = OrderItemSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Order
+        fields = ["id", "customer", "table_number", "order_type", "status", "order_items", "created_at"]
+        read_only_fields = ["customer"]  # Customer will be set automatically

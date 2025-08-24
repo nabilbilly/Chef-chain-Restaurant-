@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics, status, permissions, viewsets
 
-from .models import Category, MenuItem, Order, User
+from .models import Category, MenuItem, Order, User, OrderItem
 from .serializers import (
     MenuItemSerializer,
     RegisterSerializer,
@@ -14,6 +14,7 @@ from .serializers import (
     CustomTokenSerializer,
     CategorySerializer,
     OrderSerializer,
+    OrderItemSerializer,
 )
 
 # ----------------------------
@@ -78,13 +79,37 @@ class MenuItemViewSet(viewsets.ModelViewSet):
 # ----------------------------
 # ✅ Orders (Protected)
 # ----------------------------
+# class OrderCreateView(generics.CreateAPIView):
+#     serializer_class = OrderSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def perform_create(self, serializer):
+#         serializer.save(customer=self.request.user)
+
 class OrderCreateView(generics.CreateAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(customer=self.request.user)
-
+        # Check if user has a pending cart order
+        pending_order = Order.objects.filter(
+            customer=self.request.user, 
+            status="pending"
+        ).first()
+        
+        if pending_order:
+            # Update the existing pending order
+            pending_order.table_number = serializer.validated_data.get('table_number')
+            pending_order.order_type = serializer.validated_data.get('order_type', 'dine_in')
+            pending_order.status = 'confirmed'
+            pending_order.save()
+            return pending_order
+        else:
+            # Create new order
+            serializer.save(
+                customer=self.request.user,
+                status='confirmed'
+            )
 
 class OrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
@@ -92,6 +117,73 @@ class OrderListView(generics.ListAPIView):
 
     def get_queryset(self):
         return Order.objects.filter(customer=self.request.user)
+
+
+
+
+# Get current cart
+class CartView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        order, created = Order.objects.get_or_create(
+            customer=request.user, status="pending"
+        )
+        return Response(OrderSerializer(order).data)
+
+
+# Add item to cart
+class AddToCartView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        order, created = Order.objects.get_or_create(
+            customer=request.user, status="pending"
+        )
+        item_id = request.data.get("item")
+        quantity = int(request.data.get("quantity", 1))
+        try:
+            menu_item = MenuItem.objects.get(id=item_id)
+        except MenuItem.DoesNotExist:
+            return Response({"error": "Item not found"}, status=404)
+
+        order_item, created = OrderItem.objects.get_or_create(order=order, item=menu_item)
+        if not created:
+            order_item.quantity += quantity
+        else:
+            order_item.quantity = quantity
+        order_item.save()
+
+        return Response(OrderSerializer(order).data)
+
+
+# Update item quantity / remove
+class UpdateCartItemView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        try:
+            order_item = OrderItem.objects.get(pk=pk, order__customer=request.user, order__status="pending")
+        except OrderItem.DoesNotExist:
+            return Response({"error": "Item not found in cart"}, status=404)
+
+        quantity = int(request.data.get("quantity", 1))
+        if quantity <= 0:
+            order_item.delete()
+        else:
+            order_item.quantity = quantity
+            order_item.save()
+
+        return Response(OrderSerializer(order_item.order).data)
+
+
+
+
+
+
+
+
+
 
 
 
