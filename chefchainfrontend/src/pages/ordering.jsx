@@ -521,6 +521,7 @@ export default function Ordering() {
                       <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                         <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                           <span>🍽️</span>
+
                         </div>
                         <div className="flex-1">
                           <h4 className="font-medium text-sm">{item.name}</h4>
@@ -531,20 +532,20 @@ export default function Ordering() {
                             onClick={() => updateCartQuantity(item.id, -1)}
                             className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
                           >
-                            <Minus className="w-3 h-3" />
+                            <Minus className="w-3 h-3" /> -
                           </button>
                           <span className="w-8 text-center text-sm">{item.quantity}</span>
                           <button
                             onClick={() => updateCartQuantity(item.id, 1)}
                             className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600"
                           >
-                            <Plus className="w-3 h-3" />
+                            <Plus className="w-3 h-3" /> +
                           </button>
                           <button
                             onClick={() => removeFromCart(item.id)}
-                            className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 ml-2"
+                            className="w-6 h-6 rounded-full text-white flex items-center justify-center hover:bg-red-600 ml-2"
                           >
-                            <X className="w-3 h-3" />
+                            <X className="w-3 h-3" /> 🗑️
                           </button>
                         </div>
                       </div>

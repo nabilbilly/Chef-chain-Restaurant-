@@ -111,15 +111,33 @@ class OrderCreateView(generics.CreateAPIView):
                 status='confirmed'
             )
 
+# class OrderListView(generics.ListAPIView):
+#     serializer_class = OrderSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         return Order.objects.filter(customer=self.request.user)
+
+# In your views.py - Update OrderListView to include all orders for kitchen staff
 class OrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # You might want to add kitchen staff permission
 
     def get_queryset(self):
+        # For kitchen staff, show all orders
+        # For customers, show only their orders
+        if self.request.user.is_staff:  # or custom kitchen staff permission
+            return Order.objects.all().order_by('-created_at')
         return Order.objects.filter(customer=self.request.user)
 
-
-
+# Add order update view
+class OrderUpdateView(generics.UpdateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]  # Add kitchen staff permission
+    
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
 
 # Get current cart
 class CartView(APIView):
@@ -175,6 +193,8 @@ class UpdateCartItemView(APIView):
             order_item.save()
 
         return Response(OrderSerializer(order_item.order).data)
+
+
 
 
 

@@ -1,7 +1,7 @@
 # urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import MenuItemViewSet, RegisterView, CustomLoginView, CategoryListView, OrderListView, OrderCreateView, CartView, AddToCartView, UpdateCartItemView
+from .views import MenuItemViewSet, RegisterView, CustomLoginView, CategoryListView, OrderListView, OrderCreateView, CartView, AddToCartView, UpdateCartItemView , OrderUpdateView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 router = DefaultRouter()
@@ -12,14 +12,13 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', CustomLoginView.as_view(), name='token_obtain_pair'),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    # path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path("refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    # path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path("categories/", CategoryListView.as_view(), name="category-list"),
     path("orders/", OrderListView.as_view(), name="order-list"),
     path("orders/create/", OrderCreateView.as_view(), name="order-create"),
+    path("orders/<int:pk>/", OrderUpdateView.as_view(), name="order-update"),
     
-     path("cart/", CartView.as_view(), name="cart-detail"),
+    path("cart/", CartView.as_view(), name="cart-detail"),
     path("cart/add/", AddToCartView.as_view(), name="cart-add"),
     path("cart/item/<int:pk>/", UpdateCartItemView.as_view(), name="cart-item-update"),
 ]

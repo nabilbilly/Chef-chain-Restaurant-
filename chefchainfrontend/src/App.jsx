@@ -5,6 +5,7 @@ import Login from "./pages/login.jsx";
 import Ordering from "./pages/ordering.jsx";
 import RiderPage from "./pages/riderpage";
 import Register from "./pages/register.jsx";
+import Kitchen from "./pages/kitchen.jsx";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/ordering" element={<Ordering />} />
         <Route path="/rider" element={<RiderPage />} />
+        <Route path="/kitchen" element={<Kitchen />} />
       
       </Routes>
     </Router>
