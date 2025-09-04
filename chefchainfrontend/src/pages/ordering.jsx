@@ -13,6 +13,10 @@ export default function Ordering() {
   const [viewMode, setViewMode] = useState('grid');
   const [showCart, setShowCart] = useState(false);
 
+  // 1. ADD TOAST STATE (add these to your existing state)
+const [toastMessage, setToastMessage] = useState("");
+const [showToast, setShowToast] = useState(false);
+
   // Order state
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
@@ -69,8 +73,14 @@ export default function Ordering() {
       console.error("Error fetching menu items", err);
     }
   };
-
-  // Handle search
+    const showToastMessage = (message) => {
+      setToastMessage(message);
+      setShowToast(true);
+      setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+    };
+      // Handle search
   const handleSearch = async (e) => {
     e.preventDefault();
     try {
@@ -96,22 +106,30 @@ export default function Ordering() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItem = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Add to cart
-  const addToCart = (item) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
-      if (existingItem) {
-        return prevCart.map(cartItem =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
-        );
-      } else {
-        return [...prevCart, { ...item, quantity: 1 }];
-      }
-    });
-  };
-
+  // 3. UPDATE YOUR ADDTOCART FUNCTION (replace your existing addToCart function)
+const addToCart = (item) => {
+  setCart(prevCart => {
+    const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
+    if (existingItem) {
+      showToastMessage(`${item.name} quantity updated in cart!`);
+      return prevCart.map(cartItem =>
+        cartItem.id === item.id
+          ? { ...cartItem, quantity: cartItem.quantity + 1 }
+          : cartItem
+      );
+    } else {
+      showToastMessage(`${item.name} added to cart!`);
+      return [...prevCart, { ...item, quantity: 1 }];
+    }
+  });
+};
+// 4. ADD TOAST NOTIFICATION JSX (add this after your existing success/error messages)
+{showToast && (
+  <div className="fixed top-20 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 flex items-center gap-2 transform transition-all duration-300">
+    <CheckCircle className="w-5 h-5" />
+    <span>{toastMessage}</span>
+  </div>
+)}
   // Update cart quantity
   const updateCartQuantity = (itemId, change) => {
     setCart(prevCart =>
@@ -253,8 +271,10 @@ export default function Ordering() {
         </div>
       )}
 
+      
+
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
@@ -296,10 +316,12 @@ export default function Ordering() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex gap-8">
+      <div className="max-w-7xl  mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* <div className="flex gap-8 "> */}
+        <div className="h-screen pt-16 flex">
           {/* Left Sidebar */}
-          <div className="w-80 flex-shrink-0">
+          {/* <div className="w-80 flex-shrink-0"> */}
+          <div className="w-80 flex-shrink-0 bg-white border-r border-white overflow-y-auto ">
             {/* Search */}
             <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -366,7 +388,7 @@ export default function Ordering() {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="flex-1 overflow-y-auto">
             {/* Content Header */}
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -448,6 +470,27 @@ export default function Ordering() {
                         >
                           <Plus className="w-4 h-4" />
                         </button>
+                        {/* Toast Notification - Add this right after your existing success/error messages */}
+                          {showToast && (
+                            <div className="fixed top-20 right-4 bg-orange-500 text-white p-4 rounded-lg shadow-lg z-50 flex items-center gap-2 transform transition-all duration-300 ease-in-out">
+                              <CheckCircle className="w-5 h-5" />
+                              <span>{toastMessage}</span>
+                            </div>
+                          )}
+
+                      {/* Or with different colors based on message type */}
+                        {showToast && (
+                          <div className={`fixed top-20 right-4 p-4 rounded-lg  z-50 flex items-center gap-2 transform transition-all duration-300 ease-in-out ${
+                            toastMessage.includes('added') 
+                              ? 'bg-orange-500 text-white' 
+                              : toastMessage.includes('updated') 
+                                ? 'bg-orange-500 text-white'
+                                : 'bg-gray-500 text-white'
+                          }`}>
+                            <CheckCircle className="w-5 h-5" />
+                            <span>{toastMessage}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -471,8 +514,10 @@ export default function Ordering() {
 
           {/* Cart Sidebar */}
           {showCart && (
-            <div className="w-80 bg-white rounded-xl shadow-sm p-6 h-fit">
-              <div className="flex items-center justify-between mb-4">
+           <div className="w-80 bg-white border-l border-gray-200 fixed right-0 top-16 h-[calc(100vh-4rem)] flex flex-col">
+            {/* <div className="w-80 bg-white border-l items-center border-gray-200 fixed flex-shrink-0 overflow-y-auto"> */}
+              {/* <div className="flex items-center justify-between p-4 border-b"> */}
+              <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
                 <h3 className="text-lg font-semibold">Your Order</h3>
                 <button
                   onClick={() => setShowCart(false)}
@@ -481,7 +526,8 @@ export default function Ordering() {
                   <X className="w-4 h-4" />
                 </button>
               </div>
-
+              {/* Scrollable Cart Content */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {cart.length > 0 ? (
                 <>
                   {/* Order Type Selection */}
@@ -596,6 +642,7 @@ export default function Ordering() {
                 </div>
               )}
             </div>
+          </div>
           )}
         </div>
       </div>
