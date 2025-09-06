@@ -40,3 +40,21 @@
 .read-the-docs {
   color: #888;
 }
+@keyframes dash {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 20px 0;
+  }
+}
+
+.after\:animate-dash::after {
+  background-image: repeating-linear-gradient(
+    to right,
+    #f97316 0 10px,
+    transparent 10px 20px
+  );
+  background-size: 20px 4px;
+  animation: dash 1s linear infinite;
+}

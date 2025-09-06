@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api"; // your axios instance
+import Payment from "./payment";
 import { Search, ShoppingCart, Plus, Minus, X, Filter, Grid, List, Clock, Star, CheckCircle, AlertCircle } from "lucide-react";
+import { Link } from 'react-router-dom';
 
 export default function Ordering() {
   const [categories, setCategories] = useState([]);
@@ -24,6 +26,9 @@ const [showToast, setShowToast] = useState(false);
   const [tableNumber, setTableNumber] = useState("");
   const [orderType, setOrderType] = useState("dine_in"); // dine_in, takeaway, delivery
   const [customerId, setCustomerId] = useState(1); // You might get this from auth context
+
+  // 2. ADD PAYMENT STATE (add this to your existing state)
+const [showPaymentPopup, setShowPaymentPopup] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -123,6 +128,87 @@ const addToCart = (item) => {
     }
   });
 };
+
+const placeOrder = async (paymentDetails) => {
+  if (cart.length === 0) {
+    setOrderError("Your cart is empty!");
+    return;
+  }
+
+  if (!tableNumber && orderType === "dine_in") {
+    setOrderError("Please enter a table number for dine-in orders");
+    return;
+  }
+
+  setIsPlacingOrder(true);
+  setOrderError(null);
+
+  try {
+    // Step 1: Add all items to the backend cart first
+    console.log("Adding items to cart...");
+    for (const cartItem of cart) {
+      console.log("Adding item:", cartItem);
+      await api.post("/cart/add/", {
+        item: cartItem.id,
+        quantity: cartItem.quantity
+      });
+    }
+
+    // Step 2: Create the order with payment details
+    console.log("Creating order...");
+    const orderData = {
+      table_number: orderType === "dine_in" ? tableNumber : null,
+      order_type: orderType,
+      payment_method: paymentDetails.paymentMethod,
+      customer_name: paymentDetails.customerName,
+      customer_phone: paymentDetails.customerPhone
+    };
+    
+    console.log("Order data being sent:", orderData);
+    const response = await api.post("/orders/create/", orderData);
+    console.log("Order created successfully:", response.data);
+
+    // Success - clear cart and show success message
+    setOrderSuccess(true);
+    clearCart();
+    setTableNumber("");
+    setShowPaymentPopup(false);
+    
+    // Hide success message after 3 seconds
+    setTimeout(() => {
+      setOrderSuccess(false);
+    }, 3000);
+
+  } catch (error) {
+    console.error("Error placing order:", error);
+    console.error("Error response:", error.response?.data);
+    console.error("Error status:", error.response?.status);
+    
+    let errorMessage = "Failed to place order. Please try again.";
+    
+    if (error.response?.data) {
+      if (typeof error.response.data === 'string') {
+        errorMessage = error.response.data;
+      } else if (error.response.data.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } else {
+        // Handle field validation errors
+        const errors = Object.entries(error.response.data).map(([field, messages]) => {
+          const messageArray = Array.isArray(messages) ? messages : [messages];
+          return `${field}: ${messageArray.join(', ')}`;
+        });
+        errorMessage = errors.join('; ');
+      }
+    }
+    
+    setOrderError(errorMessage);
+  } finally {
+    setIsPlacingOrder(false);
+  }
+};
+
 // 4. ADD TOAST NOTIFICATION JSX (add this after your existing success/error messages)
 {showToast && (
   <div className="fixed top-20 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 flex items-center gap-2 transform transition-all duration-300">
@@ -152,7 +238,7 @@ const addToCart = (item) => {
   };
 
   // Place order function using your cart-based system
-  const placeOrder = async () => {
+  const placeOrders = async () => {
     if (cart.length === 0) {
       setOrderError("Your cart is empty!");
       return;
@@ -248,28 +334,7 @@ const addToCart = (item) => {
 
   return (
     <div className="min-h-screen w-screen bg-gray-50">
-      {/* Success/Error Messages */}
-      {orderSuccess && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 flex items-center gap-2">
-          <CheckCircle className="w-5 h-5" />
-          <span>Order placed successfully!</span>
-        </div>
-      )}
-      
-      {orderError && (
-        <div className="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50 flex items-center gap-2">
-          <AlertCircle className="w-5 h-5" />
-          <div>
-            <span>{orderError}</span>
-            <button 
-              onClick={() => setOrderError(null)}
-              className="ml-2 text-white hover:text-gray-200"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
+     
 
       
 
@@ -286,18 +351,34 @@ const addToCart = (item) => {
             
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-                <button
+
+                <Link 
+                  to="/orderhistory" 
+                  className="flex items-center p-2 text-gray-600 hover:text-gray-500 transition-colors relative"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="ml-2 relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-full after:h-[4px] after:border-b-4 after:border-dashed after:border-orange-500 after:animate-dash">
+                   Track Order 
+                  </span>
+                </Link>
+                {/* <button
                   onClick={() => setViewMode('grid')}
                   className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm' : ''}`}
                 >
                   <Grid className="w-4 h-4" />
-                </button>
-                <button
+                </button> */}
+                
+
+                {/* <button
                   onClick={() => setViewMode('list')}
                   className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-white shadow-sm' : ''}`}
                 >
                   <List className="w-4 h-4" />
-                </button>
+                </button> */}
+
+                
               </div>
               
               <button
@@ -313,9 +394,33 @@ const addToCart = (item) => {
               </button>
             </div>
           </div>
+          {/* Successful message -------------------------------------------------- */}
+          {orderError && (
+        <div className="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50 flex items-center gap-2">
+          <AlertCircle className="w-5 h-5" />
+          <div>
+            <span>{orderError}</span>
+            <button 
+              onClick={() => setOrderError(null)}
+              className="ml-2 text-white hover:text-gray-200"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
         </div>
       </div>
-
+        {/* Success/Error Messages */}
+      {orderSuccess && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 flex items-center gap-2">
+          <CheckCircle className="w-5 h-5" />
+          <span>Order placed successfully!</span>
+        </div>
+      )}
+      
+      
       <div className="max-w-7xl  mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* <div className="flex gap-8 "> */}
         <div className="h-screen pt-16 flex">
@@ -392,16 +497,33 @@ const addToCart = (item) => {
             {/* Content Header */}
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-2xl ml-4 font-bold text-gray-900">
                   {searchQuery ? 'Search Results' : selectedCategory ? selectedCategory.name : 'All Menu Items'}
                 </h2>
-                <p className="text-gray-600 mt-1">
+                <p className="text-gray-600 ml-4 mt-1">
                   {currentItems.length} items available
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              
+              <div className="flex items-center bg-gray-100 gap-2">
                 <Filter className="w-4 h-4 text-gray-400" />
                 <span className="text-sm text-gray-600">Filter & Sort</span>
+                
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm' : ''}`}
+                >
+                  <Grid className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-white shadow-sm' : ''}`}
+                >
+                  <List className="w-4 h-4" />
+                </button>
+                
+                
               </div>
             </div>
 
@@ -613,7 +735,7 @@ const addToCart = (item) => {
                     </div>
                   </div>
 
-                  <button 
+                  {/* <button 
                     onClick={placeOrder}
                     disabled={isPlacingOrder || (orderType === "dine_in" && !tableNumber)}
                     className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
@@ -626,7 +748,16 @@ const addToCart = (item) => {
                     ) : (
                       'Place Order'
                     )}
-                  </button>
+                  </button> */}
+
+                  <button 
+  onClick={() => setShowPaymentPopup(true)}
+  disabled={orderType === "dine_in" && !tableNumber}
+  className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  Proceed to Payment
+</button>
+
                   
                   <button
                     onClick={clearCart}
@@ -646,6 +777,20 @@ const addToCart = (item) => {
           )}
         </div>
       </div>
+      <Payment 
+        showPaymentPopup={showPaymentPopup}
+        setShowPaymentPopup={setShowPaymentPopup}
+        cart={cart}
+        subtotal={subtotal}
+        tax={tax}
+        total={total}
+        orderType={orderType}
+        tableNumber={tableNumber}
+        placeOrder={placeOrder}
+        isPlacingOrder={isPlacingOrder}
+        orderError={orderError}
+        setOrderError={setOrderError}
+      />
     </div>
   );
 }

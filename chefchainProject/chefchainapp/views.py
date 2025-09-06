@@ -76,15 +76,7 @@ class MenuItemViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-# ----------------------------
-# ✅ Orders (Protected)
-# ----------------------------
-# class OrderCreateView(generics.CreateAPIView):
-#     serializer_class = OrderSerializer
-#     permission_classes = [IsAuthenticated]
 
-#     def perform_create(self, serializer):
-#         serializer.save(customer=self.request.user)
 
 class OrderCreateView(generics.CreateAPIView):
     serializer_class = OrderSerializer
@@ -111,12 +103,6 @@ class OrderCreateView(generics.CreateAPIView):
                 status='confirmed'
             )
 
-# class OrderListView(generics.ListAPIView):
-#     serializer_class = OrderSerializer
-#     permission_classes = [IsAuthenticated]
-
-#     def get_queryset(self):
-#         return Order.objects.filter(customer=self.request.user)
 
 # In your views.py - Update OrderListView to include all orders for kitchen staff
 class OrderListView(generics.ListAPIView):
@@ -194,6 +180,36 @@ class UpdateCartItemView(APIView):
 
         return Response(OrderSerializer(order_item.order).data)
 
+
+
+# Add this to your existing views.py file
+
+class OrderHistoryView(generics.ListAPIView):
+    """
+    Get order history for the authenticated customer
+    Only shows completed orders (not pending cart items)
+    """
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Only return orders for the authenticated user that are not pending
+        return Order.objects.filter(
+            customer=self.request.user,
+            status__in=['confirmed', 'preparing', 'ready', 'delivered']
+        ).order_by('-created_at')
+
+
+class OrderDetailView(generics.RetrieveAPIView):
+    """
+    Get detailed view of a specific order for the authenticated customer
+    """
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Only allow customers to see their own orders
+        return Order.objects.filter(customer=self.request.user)
 
 
 

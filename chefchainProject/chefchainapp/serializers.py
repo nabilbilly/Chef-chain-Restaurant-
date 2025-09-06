@@ -5,11 +5,7 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-# class MenuItemSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = MenuItem
-#         fields = '__all__'
-        
+     
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,24 +31,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(validated_data["password"])
         user.save()
         return user
-# class RegisterSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = ['username', 'password', 'email', 'role']
-#         extra_kwargs = {'password': {'write_only': True}}
-
-#     def create(self, validated_data):
-#         user = User.objects.create_user(**validated_data)
-#         return user
-
-# class CustomTokenSerializer(TokenObtainPairSerializer):
-#     @classmethod
-#     def get_token(cls, user):
-#         token = super().get_token(user)
-#         token['role'] = user.role
-#         token['username'] = user.username
-#         return token
-
 
 
 class CustomTokenSerializer(TokenObtainPairSerializer):
@@ -66,11 +44,6 @@ class CustomTokenSerializer(TokenObtainPairSerializer):
         token["email"] = user.email   # optional, useful for frontend
 
         return token
-
-# restaurant/serializers.py
-# from rest_framework import serializers
-# from .models import Category, MenuItem, Order, OrderItem
-
 
 class MenuItemSerializer(serializers.ModelSerializer): 
     category = serializers.StringRelatedField() #

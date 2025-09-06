@@ -1,8 +1,13 @@
 # urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import MenuItemViewSet, RegisterView, CustomLoginView, CategoryListView, OrderListView, OrderCreateView, CartView, AddToCartView, UpdateCartItemView , OrderUpdateView
+# from .views import MenuItemViewSet, RegisterView, CustomLoginView, CategoryListView, OrderListView, OrderCreateView, CartView, AddToCartView, UpdateCartItemView , OrderUpdateView , OrderHistoryView , OrderDetailView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from .views import (
+    MenuItemViewSet, RegisterView, CustomLoginView, CategoryListView, 
+    OrderListView, OrderCreateView, CartView, AddToCartView, 
+    UpdateCartItemView, OrderUpdateView, OrderHistoryView, OrderDetailView
+)
 
 router = DefaultRouter()
 router.register(r'menu', MenuItemViewSet, basename='menu')
@@ -17,6 +22,13 @@ urlpatterns = [
     path("orders/", OrderListView.as_view(), name="order-list"),
     path("orders/create/", OrderCreateView.as_view(), name="order-create"),
     path("orders/<int:pk>/", OrderUpdateView.as_view(), name="order-update"),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
+    #Order History endpoints
+    path("orders/history/", OrderHistoryView.as_view(), name="order-history"),
+    path("orders/history/<int:pk>/", OrderDetailView.as_view(), name="order-detail"),
+    
     
     path("cart/", CartView.as_view(), name="cart-detail"),
     path("cart/add/", AddToCartView.as_view(), name="cart-add"),

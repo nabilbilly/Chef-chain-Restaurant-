@@ -1,15 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, User
 
-# class MenuItem(models.Model):  
-#     name = models.CharField(max_length=100)
-#     description = models.TextField()
-#     image = models.ImageField(upload_to='menu_images/')  # 👈 stores in MEDIA_ROOT/menu_images/
-
-#     def __str__(self):
-#         return self.name
-
-
 
 class User(AbstractUser):
     ROLE_CHOICES = [
@@ -46,23 +37,7 @@ class MenuItem(models.Model):
         return self.name
 
 
-# class Order(models.Model):
-#     STATUS_CHOICES = [
-#         ("pending", "Pending"),
-#         ("preparing", "Preparing"),
-#         ("served", "Served"),
-#         ("completed", "Completed"),
-#     ]
 
-#     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
-#     table_number = models.CharField(max_length=10, blank=True, null=True)  # dine-in
-#     order_type = models.CharField(max_length=20, choices=[("dine_in", "Dine In"), ("takeaway", "Takeaway")])
-#     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
-#     created_at = models.DateTimeField(auto_now_add=True)
-
-#     def __str__(self):
-#         return f"Order #{self.id} - {self.customer.username}"
-# models.py
 class Order(models.Model):
     ORDER_TYPE_CHOICES = [
         ('dine_in', 'Dine In'),
