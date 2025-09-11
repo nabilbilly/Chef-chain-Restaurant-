@@ -48,36 +48,66 @@ const [showPaymentPopup, setShowPaymentPopup] = useState(false);
   }, []);
 
   // Fetch items when category changes (or load all if none selected)
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        let res;
-        if (selectedCategory) {
-          res = await api.get(`/menu/?category=${selectedCategory.id}`);
-        } else {
-          res = await api.get("/menu/");
-        }
-        setMenuItems(res.data.results ? res.data.results : res.data);
-      } catch (err) {
-        console.error("Error fetching items", err);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchItems = async () => {
+  //     try {
+  //       let res;
+  //       if (selectedCategory) {
+  //         res = await api.get(`/menu/?category=${selectedCategory.id}`);
+  //       } else {
+  //         res = await api.get("/menu/");
+  //       }
+  //       // Add this line after setting menuItems in each function
+  //       setMenuItems(data.filter(item => item.available !== false));
+  //       setMenuItems(res.data.results ? res.data.results : res.data);
+  //     } catch (err) {
+  //       console.error("Error fetching items", err);
+  //     }
+  //   };
 
-    fetchItems();
-  }, [selectedCategory]);
+  //   fetchItems();
+  // }, [selectedCategory]);
+
+  useEffect(() => {
+  const fetchItems = async () => {
+    try {
+      let res;
+      if (selectedCategory) {
+        res = await api.get(`/menu/?category=${selectedCategory.id}&available=true`);
+      } else {
+        res = await api.get("/menu/?available=true");
+      }
+      setMenuItems(res.data.results ? res.data.results : res.data);
+    } catch (err) {
+      console.error("Error fetching items", err);
+    }
+  };
+
+  fetchItems();
+}, [selectedCategory]);
 
   useEffect(() => {
     fetchMenuItems();
   }, []);
 
   const fetchMenuItems = async () => {
-    try {
-      const res = await api.get("/menu/");
-      setMenuItems(res.data.results ? res.data.results : res.data);
-    } catch (err) {
-      console.error("Error fetching menu items", err);
-    }
-  };
+  try {
+    const res = await api.get("/menu/?available=true");
+    setMenuItems(res.data.results ? res.data.results : res.data);
+  } catch (err) {
+    console.error("Error fetching menu items", err);
+  }
+};
+  // const fetchMenuItems = async () => {
+  //   try {
+  //     const res = await api.get("/menu/");
+  //     // Add this line after setting menuItems in each function
+  //     setMenuItems(data.filter(item => item.available !== false));
+  //     setMenuItems(res.data.results ? res.data.results : res.data);
+  //   } catch (err) {
+  //     console.error("Error fetching menu items", err);
+  //   }
+  // };
     const showToastMessage = (message) => {
       setToastMessage(message);
       setShowToast(true);
@@ -86,20 +116,38 @@ const [showPaymentPopup, setShowPaymentPopup] = useState(false);
       }, 3000);
     };
       // Handle search
+  // const handleSearch = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     let res;
+  //     if (searchQuery.trim() === "") {
+  //       res = await api.get("/menu/");
+  //     } else {
+  //       res = await api.get(`/menu/?search=${searchQuery}`);
+  //     }
+  //     setMenuItems(res.data.results ? res.data.results : res.data);
+  //   } catch (err) {
+  //     console.error("Error searching items", err);
+  //   }
+  // };
   const handleSearch = async (e) => {
-    e.preventDefault();
-    try {
-      let res;
-      if (searchQuery.trim() === "") {
-        res = await api.get("/menu/");
-      } else {
-        res = await api.get(`/menu/?search=${searchQuery}`);
-      }
-      setMenuItems(res.data.results ? res.data.results : res.data);
-    } catch (err) {
-      console.error("Error searching items", err);
+  e.preventDefault();
+  try {
+    let res;
+    if (searchQuery.trim() === "") {
+      res = await api.get("/menu/");
+    } else {
+      res = await api.get(`/menu/?search=${searchQuery}`);
     }
-  };
+    
+    // Get the data and filter for available items only
+    const data = res.data.results ? res.data.results : res.data;
+    const availableItems = data.filter(item => item.available === true);
+    setMenuItems(availableItems);
+  } catch (err) {
+    console.error("Error searching items", err);
+  }
+};
 
   // Filter by category (if selected)
   const filteredItems = selectedCategory
@@ -363,22 +411,7 @@ const placeOrder = async (paymentDetails) => {
                    Track Order 
                   </span>
                 </Link>
-                {/* <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm' : ''}`}
-                >
-                  <Grid className="w-4 h-4" />
-                </button> */}
-                
 
-                {/* <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-white shadow-sm' : ''}`}
-                >
-                  <List className="w-4 h-4" />
-                </button> */}
-
-                
               </div>
               
               <button
@@ -508,7 +541,7 @@ const placeOrder = async (paymentDetails) => {
               <div className="flex items-center bg-gray-100 gap-2">
                 <Filter className="w-4 h-4 text-gray-400" />
                 <span className="text-sm text-gray-600">Filter & Sort</span>
-                
+
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-white shadow-sm' : ''}`}

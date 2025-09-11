@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { 
   Clock, 
   CheckCircle, 
@@ -188,7 +189,7 @@ export default function Kitchen() {
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <div className="flex items-center">
                   <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-                  <span className="text-red-700">{loginError}</span>
+                  <span className="text-red-700">{loginError} or Not a kitchen Staff</span>
                 </div>
               </div>
             )}
@@ -231,7 +232,7 @@ export default function Kitchen() {
                 {loginLoading ? (
                   <div className="flex items-center">
                     <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                    Signing in...
+                    Signing in... 
                   </div>
                 ) : (
                   'Sign in'
@@ -346,8 +347,10 @@ export default function Kitchen() {
                     : 'bg-gray-100 text-gray-700'
                 }`}
               >
+
                 Auto-refresh {autoRefresh ? 'ON' : 'OFF'}
               </button>
+
               <button
                 onClick={fetchOrders}
                 disabled={loading}
@@ -361,6 +364,13 @@ export default function Kitchen() {
               >
                 Logout
               </button>
+
+              <Link to="/updatemenu" className="flex items-center p-2 text-gray-600 hover:text-gray-500 transition-colors relative" >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="ml-2 relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-full after:h-[4px] after:border-b-4 after:border-dashed after:border-orange-500 after:animate-dash"> Menu</span>
+              </Link>
             </div>
           </div>
         </div>

@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .views import (
     MenuItemViewSet, RegisterView, CustomLoginView, CategoryListView, 
     OrderListView, OrderCreateView, CartView, AddToCartView, 
-    UpdateCartItemView, OrderUpdateView, OrderHistoryView, OrderDetailView
+    UpdateCartItemView, OrderUpdateView, OrderHistoryView, OrderDetailView, update_menu_item
 )
 
 router = DefaultRouter()
@@ -29,7 +29,7 @@ urlpatterns = [
     path("orders/history/", OrderHistoryView.as_view(), name="order-history"),
     path("orders/history/<int:pk>/", OrderDetailView.as_view(), name="order-detail"),
     
-    
+    path('menu/<int:item_id>/', update_menu_item, name='update_menu_item'),
     path("cart/", CartView.as_view(), name="cart-detail"),
     path("cart/add/", AddToCartView.as_view(), name="cart-add"),
     path("cart/item/<int:pk>/", UpdateCartItemView.as_view(), name="cart-item-update"),

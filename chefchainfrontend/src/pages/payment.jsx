@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { X, AlertCircle, CheckCircle } from "lucide-react";
+import { paystackHandler } from './paystack-handler.js';
 
 const Payment = ({
   showPaymentPopup,
@@ -18,10 +19,66 @@ const Payment = ({
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [showLoaderPopup, setShowLoaderPopup] = useState(false);
+
+  const handlePaystackPayment = async () => {
+    // Validate required fields for Paystack
+    if (!customerName.trim()) {
+      setOrderError("Please enter customer name");
+      return;
+    }
+    if (!customerEmail.trim()) {
+      setOrderError("Please enter customer email");
+      return;
+    }
+    if (!customerPhone.trim()) {
+      setOrderError("Please enter customer phone number");
+      return;
+    }
+
+    try {
+      await paystackHandler.initiatePayment({
+        email: customerEmail,
+        amount: total,
+        customerName,
+        customerPhone,
+        orderType,
+        tableNumber,
+        cart,
+        onSuccess: (paymentData) => {
+          console.log('Payment successful:', paymentData);
+
+          // Call your placeOrder function with payment details
+          placeOrder({
+            paymentMethod: 'paystack',
+            customerName,
+            customerPhone,
+            customerEmail,
+            paystackReference: paymentData.reference,
+            transactionId: paymentData.transactionId,
+            status: paymentData.status
+          });
+        },
+        onError: (error) => {
+          setOrderError(`Payment failed: ${error}`);
+        },
+        onClose: () => {
+          setOrderError('Payment was cancelled');
+        }
+      });
+    } catch (error) {
+      setOrderError(`Payment initialization failed: ${error.message}`);
+    }
+  };
 
   const handlePlaceOrder = async () => {
     setOrderError(null);
+
+    if (paymentMethod === "paystack") {
+      handlePaystackPayment();
+      return;
+    }
 
     if (paymentMethod === "mobile_money") {
       if (!customerName.trim()) {
@@ -120,7 +177,7 @@ const Payment = ({
             </div>
 
             {/* Customer Information */}
-            {paymentMethod === "mobile_money" && (
+            {(paymentMethod === "mobile_money" || paymentMethod === "paystack") && (
               <div className="space-y-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -135,12 +192,27 @@ const Payment = ({
                   />
                 </div>
 
+                {paymentMethod === "paystack" && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      placeholder="Enter email address"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                    />
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Phone Number *
                   </label>
                   <input
-                    type="number"
+                    type="tel"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     placeholder="Enter phone number"
@@ -168,10 +240,11 @@ const Payment = ({
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Payment Method
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 {[
                   { key: "cash", label: "Cash", icon: "💵" },
-                  { key: "mobile_money", label: "Mobile Money", icon: "📱" },
+                  // { key: "mobile_money", label: "Mobile Money", icon: "📱" },
+                  { key: "paystack", label: "📱Mobile Money", icon: "💳" },
                 ].map((method) => (
                   <button
                     key={method.key}
@@ -209,8 +282,10 @@ const Payment = ({
                   </div>
                 ) : paymentMethod === "cash" ? (
                   `Proceed Order - ₵${total.toFixed(2)}`
+                ) : paymentMethod === "paystack" ? (
+                  `Pay with Card - ₵${total.toFixed(2)}`
                 ) : (
-                  `Pay with Mobile Money`
+                  `Pay with `
                 )}
               </button>
             </div>

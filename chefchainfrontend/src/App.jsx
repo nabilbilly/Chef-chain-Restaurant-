@@ -8,6 +8,9 @@ import Register from "./pages/register.jsx";
 import Kitchen from "./pages/kitchen.jsx";
 import OrderHistory from "./pages/orderhistory.jsx";
 import SimpleOrderHistory from "./pages/simpleorderhistory.jsx";
+import UpdateMenu from "./pages/updatemenu.jsx";
+import Payment from "./pages/payments.jsx";
+import PaymentVerification from "./pages/payment.jsx";
 
 export default function App() {
   return (
@@ -21,6 +24,9 @@ export default function App() {
         <Route path="/kitchen" element={<Kitchen />} />
         <Route path="/orderhistory" element={<OrderHistory />} />
         <Route path="/simpleorderhistory" element={<SimpleOrderHistory />} />
+        <Route path="/updatemenu" element={<UpdateMenu />} />
+        <Route path="/payment" element={<Payment />} />
+        <Route path="/paymentverification" element={<PaymentVerification />} />
       
       </Routes>
     </Router>

@@ -353,15 +353,10 @@ const OrderHistory = () => {
           >
             Debug API
           </button> */}
-          <Link 
-                  to="/ordering" 
-                  className="flex items-center p-2 text-orange-500 hover:orange-400 transition-colors"
-                >
+          <Link to="/ordering" className="flex items-center p-2 text-orange-500 hover:orange-400 transition-colors">
                  <button className="text-sm bg-orange-500 hover:bg-gray-200 text-white px-3 py-1 rounded-md transition-colors" >
-            
-          
-                   🍰 Back to Menu</button> 
-                </Link>
+                   🍰 Back to Kitchen </button> 
+          </Link>
         </div>
       </div>
       
@@ -409,7 +404,7 @@ const OrderHistory = () => {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Total:</span>
-                    <span className="font-semibold text-green-600">${calculateOrderTotal(order.order_items || [])}</span>
+                    <span className="font-semibold text-green-600">₵{calculateOrderTotal(order.order_items || [])}</span>
                   </div>
                 </div>
 
@@ -419,7 +414,7 @@ const OrderHistory = () => {
                     {order.order_items?.slice(0, 3).map((item, index) => (
                       <div key={index} className="flex justify-between items-center text-sm">
                         <span className="text-gray-600">{item.quantity}x {item.item_name}</span>
-                        <span className="font-medium">${item.total_price || (item.quantity * item.price).toFixed(2)}</span>
+                        <span className="font-medium">₵{item.total_price || (item.quantity * item.price).toFixed(2)}</span>
                       </div>
                     ))}
                     {order.order_items?.length > 3 && (

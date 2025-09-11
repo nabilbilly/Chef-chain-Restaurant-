@@ -18,12 +18,15 @@ from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+PAYSTACK_SECRET_KEY = "sk_test_2ba1f4a1975ae43085307d4f7441a10440e8ec63"
+PAYSTACK_PUBLIC_KEY = "pk_test_52c55ad47c788f26e3b859362da880a39ca0ca93"
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-!%=eq5*bu_olu+gcd#eot5&zauzliq3jy4$n@ye%+#ka1li+8_'
+
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -134,7 +137,7 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.AllowAny",  # public unless overridden
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20
+    'PAGE_SIZE': 1000
 }
 AUTH_USER_MODEL = 'chefchainapp.User'
 

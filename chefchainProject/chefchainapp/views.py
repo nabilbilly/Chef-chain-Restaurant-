@@ -56,14 +56,15 @@ class MenuItemListCreateView(generics.ListCreateAPIView):
     serializer_class = MenuItemSerializer
     permission_classes = [AllowAny]
 
-
 class MenuItemViewSet(viewsets.ModelViewSet):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
-    permission_classes = [AllowAny]  # 👈 make public
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        # Start with only available items
+        queryset = MenuItem.objects.filter(available=True)
+        
         category_id = self.request.query_params.get("category")
         search = self.request.query_params.get("search")
 
@@ -74,6 +75,23 @@ class MenuItemViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(name__icontains=search)
 
         return queryset
+# class MenuItemViewSet(viewsets.ModelViewSet):
+#     queryset = MenuItem.objects.all()
+#     serializer_class = MenuItemSerializer
+#     permission_classes = [AllowAny]  # 👈 make public
+
+#     def get_queryset(self):
+#         queryset = super().get_queryset()
+#         category_id = self.request.query_params.get("category")
+#         search = self.request.query_params.get("search")
+
+#         if category_id:
+#             queryset = queryset.filter(category__id=category_id)
+
+#         if search:
+#             queryset = queryset.filter(name__icontains=search)
+
+#         return queryset
 
 
 
@@ -110,11 +128,7 @@ class OrderListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]  # You might want to add kitchen staff permission
 
     def get_queryset(self):
-        # For kitchen staff, show all orders
-        # For customers, show only their orders
-        if self.request.user.is_staff:  # or custom kitchen staff permission
-            return Order.objects.all().order_by('-created_at')
-        return Order.objects.filter(customer=self.request.user)
+        return Order.objects.all().order_by('-created_at')
 
 # Add order update view
 class OrderUpdateView(generics.UpdateAPIView):
@@ -212,9 +226,25 @@ class OrderDetailView(generics.RetrieveAPIView):
         return Order.objects.filter(customer=self.request.user)
 
 
-
-
-
+@api_view(['PATCH'])
+def update_menu_item(request, item_id):
+    try:
+        item = MenuItem.objects.get(id=item_id)
+        # Fix: Use 'available' instead of 'is_available' to match your model
+        item.available = request.data.get('available', item.available)
+        item.save()
+        
+        # Return the updated item data for frontend use
+        return Response({
+            "message": "Updated successfully", 
+            "item": {
+                "id": item.id,
+                "available": item.available,
+                "name": item.name
+            }
+        }, status=200)
+    except MenuItem.DoesNotExist:
+        return Response({"error": "Item not found"}, status=404)
 
 
 
